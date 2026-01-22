@@ -7,7 +7,7 @@ name = "cuneiform-translator"
 version = "0.0.1"
 description = "Translating ancient Sumerian cuneiform tablets."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 authors = [
     {name = "Cuneiform Team", email = "team@example.com"},
 ]
