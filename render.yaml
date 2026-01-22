@@ -1,10 +1,9 @@
 services:
   - type: web
     name: cuneiform-api
-    runtime: python
-    pythonVersion: 3.9
-    buildCommand: pip install -r backend/requirements.txt && pip install gunicorn eventlet
-    startCommand: cd backend && gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:$PORT --timeout 120 --access-logfile - "app:create_app('production')"
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
       - key: FLASK_ENV
         value: production
