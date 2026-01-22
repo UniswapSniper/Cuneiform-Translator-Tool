@@ -10,7 +10,7 @@ This project aims to build a comprehensive pipeline for digitizing, annotating, 
 **MVP target:** Full tablet → transliteration workflow with manual review  
 **Future phases:** ML-powered sign recognition, English glossing, web UI
 
-## Project Status: Steps 1-4 Complete ✅
+## Project Status: Steps 1-4 Complete + Phase 1 Web UI ✅
 
 ### Recent Completions
 
@@ -18,8 +18,27 @@ This project aims to build a comprehensive pipeline for digitizing, annotating, 
 - **Step 2 (Jan 21, 2026)**: Data quality checks & inter-annotator agreement metrics
 - **Step 3 (Jan 21, 2026)**: YOLOv8 baseline sign detection model training pipeline
 - **Step 4 (Jan 21, 2026)**: 3D rendering & augmentation pipeline for improved model training
+- **Phase 1 (Jan 21, 2026)**: Web UI Foundation - Flask backend + React frontend scaffold
 
-See [docs/](docs/) for detailed step documentation:
+### Web UI Architecture (Phase 1 Complete)
+
+**Backend** (`backend/`):
+- Flask 2.3.3 REST API with 21 endpoints
+- SQLAlchemy ORM with 6 database models
+- Flask-SocketIO for real-time WebSocket communication
+- 5 API blueprints (Health, Pipeline, Models, Tablets, Analytics)
+- JWT authentication scaffolding
+
+**Frontend** (`frontend/`):
+- React 18 + TypeScript + Vite
+- 7 complete pages with UI shells
+- Zustand state management
+- Tailwind CSS + Framer Motion animations
+- Recharts for data visualization
+- Socket.IO client for real-time updates
+
+See [docs/](docs/) for detailed documentation:
+- [PHASE_1_WEB_UI_FOUNDATION.md](docs/PHASE_1_WEB_UI_FOUNDATION.md) - Web UI architecture
 - [CDLI_API_INTEGRATION.md](docs/CDLI_API_INTEGRATION.md)
 - [STEP2_DATA_QUALITY_AND_IAA.md](docs/STEP2_DATA_QUALITY_AND_IAA.md)
 - [STEP3_YOLOV8_BASELINE.md](docs/STEP3_YOLOV8_BASELINE.md)
