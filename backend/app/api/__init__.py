@@ -7,6 +7,7 @@ pipeline_bp = Blueprint('pipeline', __name__, url_prefix='/api/pipeline')
 models_bp = Blueprint('models', __name__, url_prefix='/api/models')
 tablets_bp = Blueprint('tablets', __name__, url_prefix='/api/tablets')
 analytics_bp = Blueprint('analytics', __name__, url_prefix='/api/analytics')
+test_bp = Blueprint('test', __name__, url_prefix='/api/test')
 
 # Register routes
 from .health import *
@@ -14,5 +15,6 @@ from .pipeline import *
 from .models import *
 from .tablets import *
 from .analytics import *
+from .test import *
 
-__all__ = ['health_bp', 'pipeline_bp', 'models_bp', 'tablets_bp', 'analytics_bp']
+__all__ = ['health_bp', 'pipeline_bp', 'models_bp', 'tablets_bp', 'analytics_bp', 'test_bp']

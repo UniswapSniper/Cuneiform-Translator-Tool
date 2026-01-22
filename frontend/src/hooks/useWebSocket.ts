@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import io, { Socket } from 'socket.io-client'
-import { usePipelineStore } from '../stores/pipelineStore'
+import { usePipelineStore } from '../stores/websocketStore'
 
 export function useWebSocket(url?: string) {
   const socketRef = useRef<Socket | null>(null)
+  const { setConnected, setConnectionError } = usePipelineStore()
 
   useEffect(() => {
     const socketURL = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001'
@@ -16,54 +17,123 @@ export function useWebSocket(url?: string) {
     })
 
     socketRef.current.on('connect', () => {
-      console.log('Connected to WebSocket')
+      console.log('✅ Connected to WebSocket')
+      setConnected(true)
+      setConnectionError(null)
     })
 
     socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from WebSocket')
+      console.log('❌ Disconnected from WebSocket')
+      setConnected(false)
+    })
+
+    socketRef.current.on('error', (data: any) => {
+      console.error('WebSocket error:', data)
+      setConnectionError(data?.message || 'WebSocket connection error')
     })
 
     return () => {
       socketRef.current?.disconnect()
     }
-  }, [url])
+  }, [url, setConnected, setConnectionError])
 
   return socketRef.current
 }
 
 export function usePipelineWebSocket(runId?: number) {
   const socket = useWebSocket()
-  const { updateProgress, updateStatus } = usePipelineStore()
+  const store = usePipelineStore()
+  const subscribed = useRef(false)
 
   useEffect(() => {
     if (!socket || !runId) return
 
-    // Subscribe to pipeline updates
-    socket.emit('subscribe:pipeline', { run_id: runId })
+    // Avoid duplicate subscriptions
+    if (!subscribed.current) {
+      socket.emit('subscribe:pipeline', { run_id: runId })
+      subscribed.current = true
+      store.setRunId(runId)
+    }
 
-    // Listen for progress updates
-    socket.on('pipeline:progress', (data) => {
-      updateProgress(data.progress)
-      updateStatus(data.status)
-    })
+    // Pipeline progress updates
+    const handlePipelineProgress = (data: any) => {
+      store.updateProgress(data.progress)
+      store.updateStatus(data.status)
+      store.updateStatusMessage(data.message || '')
+    }
 
-    // Listen for step updates
-    socket.on('step:progress', (data) => {
-      console.log('Step update:', data)
-    })
+    // Step progress updates
+    const handleStepProgress = (data: any) => {
+      store.updateStep(data.step_name, data.progress, data.status)
+    }
 
-    // Listen for metrics updates
-    socket.on('metrics', (data) => {
-      console.log('Metrics update:', data)
-    })
+    // Metrics updates
+    const handleMetricsUpdate = (data: any) => {
+      store.updateMetrics(data.metrics)
+    }
 
+    // Batch metrics updates
+    const handleBatchMetrics = (data: any) => {
+      store.addBatchMetrics({
+        batch_num: data.batch_num,
+        epoch: data.epoch,
+        metrics: data.metrics,
+        timestamp: data.timestamp,
+      })
+    }
+
+    // Log messages
+    const handleLogMessage = (data: any) => {
+      store.addLog({
+        level: data.level,
+        message: data.message,
+        timestamp: data.timestamp,
+        context: data.context,
+      })
+    }
+
+    // Error handling
+    const handlePipelineError = (data: any) => {
+      store.setError(data.error_message, data.traceback)
+    }
+
+    // Pipeline lifecycle
+    const handlePipelineStarted = (data: any) => {
+      console.log('Pipeline started:', data)
+      store.updateStatus('running')
+      store.updateProgress(0)
+    }
+
+    const handlePipelineCompleted = (data: any) => {
+      console.log('Pipeline completed:', data)
+      store.updateStatus('completed')
+      store.updateProgress(100)
+    }
+
+    // Register all handlers
+    socket.on('pipeline:progress', handlePipelineProgress)
+    socket.on('step:progress', handleStepProgress)
+    socket.on('metrics:update', handleMetricsUpdate)
+    socket.on('batch:metrics', handleBatchMetrics)
+    socket.on('log:message', handleLogMessage)
+    socket.on('pipeline:error', handlePipelineError)
+    socket.on('pipeline:started', handlePipelineStarted)
+    socket.on('pipeline:completed', handlePipelineCompleted)
+
+    // Cleanup
     return () => {
       socket.emit('unsubscribe:pipeline', { run_id: runId })
-      socket.off('pipeline:progress')
-      socket.off('step:progress')
-      socket.off('metrics')
+      socket.off('pipeline:progress', handlePipelineProgress)
+      socket.off('step:progress', handleStepProgress)
+      socket.off('metrics:update', handleMetricsUpdate)
+      socket.off('batch:metrics', handleBatchMetrics)
+      socket.off('log:message', handleLogMessage)
+      socket.off('pipeline:error', handlePipelineError)
+      socket.off('pipeline:started', handlePipelineStarted)
+      socket.off('pipeline:completed', handlePipelineCompleted)
+      subscribed.current = false
     }
-  }, [socket, runId, updateProgress, updateStatus])
+  }, [socket, runId, store])
 
   return socket
 }

@@ -1,7 +1,14 @@
+import { WebSocketTest } from '../components/WebSocketTest'
+
 export default function Dashboard() {
   return (
     <div className="page-container">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Welcome to Cuneiform Translator</h1>
+      
+      <div className="mb-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h2 className="text-lg font-semibold text-blue-900 mb-4">🔧 Phase 2.2: WebSocket Testing</h2>
+        <WebSocketTest />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div className="card">

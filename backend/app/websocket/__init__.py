@@ -1,7 +1,7 @@
 """WebSocket handlers for real-time communication."""
 from flask_socketio import emit, join_room, leave_room
-from app import socketio, db
-from app.models import PipelineRun, PipelineStep
+from .. import socketio, db
+from ..models import PipelineRun, PipelineStep
 from datetime import datetime
 
 
