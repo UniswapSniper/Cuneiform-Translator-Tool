@@ -10,6 +10,19 @@ This project aims to build a comprehensive pipeline for digitizing, annotating, 
 **MVP target:** Full tablet → transliteration workflow with manual review  
 **Future phases:** ML-powered sign recognition, English glossing, web UI
 
+## Project Status: Steps 1-3 Complete ✅
+
+### Recent Completions
+
+- **Step 1 (Dec 2025)**: CDLI REST API integration framework with mock data fallback
+- **Step 2 (Jan 21, 2026)**: Data quality checks & inter-annotator agreement metrics
+- **Step 3 (Jan 21, 2026)**: YOLOv8 baseline sign detection model training pipeline
+
+See [docs/](docs/) for detailed step documentation:
+- [CDLI_API_INTEGRATION.md](docs/CDLI_API_INTEGRATION.md)
+- [STEP2_DATA_QUALITY_AND_IAA.md](docs/STEP2_DATA_QUALITY_AND_IAA.md)
+- [STEP3_YOLOV8_BASELINE.md](docs/STEP3_YOLOV8_BASELINE.md)
+
 ## Quick Start
 
 ### Prerequisites
@@ -123,24 +136,39 @@ This project builds on established research:
 
 ## Current focus
 
-### M0 (MVP Foundation)
+### M0 (MVP Foundation) — ~85% Complete
 - ✅ Project structure & module layout
 - ✅ Annotation format schema
-- 🚧 Data ingestion from CDLI (photos + 3D models)
-- 🚧 3D rendering pipeline (GigaMesh integration)
-- 🚧 Basic annotation tool (CLI)
-- 🚧 Test suite & CI/CD
+- ✅ Data pipeline from CDLI API
+- ✅ Annotation CLI tool with region management
+- ✅ Data quality validation & IAA metrics
+- ✅ YOLO dataset conversion & training pipeline
+- 🚧 3D rendering (GigaMesh) — deferred to M2
+- 🚧 CI/CD & test automation
 
-### M1 (Enhanced annotation)
-- Batch annotation workflow
-- Inter-annotator agreement metrics
-- Data quality checks
-- Web-based annotation UI (Streamlit)
+### M1 (Annotation Workflow) — ~90% Complete
+- ✅ Batch annotation capability
+- ✅ Inter-annotator agreement metrics (Fleiss' kappa, IoU-based)
+- ✅ Data quality checks (overlaps, bounds validation)
+- ✅ Quality scoring (0-100 with PASS/WARNING/FAIL)
+- 🚧 Web-based annotation UI (Streamlit)
+- 🚧 Advanced comparison workflows
 
-### M2+ (Machine learning)
-- Vision-based sign recognition
-- Transliteration RNN/Transformer
-- English glossing model
+### M2 (ML Pipeline) — ~80% Complete
+- ✅ YOLOv8 sign detection baseline
+- ✅ Training data converter (annotated tablets → YOLO format)
+- ✅ End-to-end training orchestration
+- ✅ Inference engine with batch prediction
+- ✅ Prediction export (JSON/JSONL/CSV)
+- 🚧 3D rendering with GigaMesh
+- 🚧 RepPoints ensemble for production
+- 🚧 Sign classification model
+
+### M3+ (Production) — Planned
+- REST API service
+- Web UI for annotation & translation
+- Transfer learning pipelines
+- English glossing with NLP
 - Benchmark datasets & leaderboards
 
 See [ROADMAP.md](ROADMAP.md) for detailed timeline and feature breakdown.
