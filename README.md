@@ -51,6 +51,26 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+### Run the Complete Pipeline
+
+The easiest way to get started is with the unified pipeline orchestrator:
+
+```bash
+# Full pipeline with 3D augmentation (recommended)
+python scripts/run_complete_pipeline.py --mode full --enable-augmentation
+
+# Compare baseline vs. 3D-augmented models
+python scripts/run_complete_pipeline.py --enable-augmentation --train-baseline
+
+# Skip to training (if you already have annotated data)
+python scripts/run_complete_pipeline.py --skip-download --skip-annotation
+
+# Interactive mode (prompts for each step)
+python scripts/run_complete_pipeline.py --mode interactive
+```
+
+See [docs/PIPELINE_ORCHESTRATION.md](docs/PIPELINE_ORCHESTRATION.md) for complete usage guide.
+
 ### Running tests
 ```bash
 pytest tests/ -v
