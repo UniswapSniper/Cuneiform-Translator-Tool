@@ -1,8 +1,8 @@
 """Model management API endpoints."""
 from flask import request, jsonify
-from .. import db
-from ..models import TrainedModel
-from . import models_bp
+from app import db
+from app.models import TrainedModel
+from app.api import models_bp
 
 
 @models_bp.route('', methods=['GET'])
