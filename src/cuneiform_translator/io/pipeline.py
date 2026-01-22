@@ -12,6 +12,8 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Iterator, Optional
+from collections import defaultdict
+from shapely.geometry import Polygon, box
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -180,6 +182,197 @@ class DataPipeline:
                 stats["errors"].append({"file": json_file.name, "error": error})
 
         return stats
+
+    # ===== Data Quality Checks =====
+
+    def check_overlapping_regions(self, record: TabletRecord) -> dict[str, Any]:
+        """
+        Detect overlapping or intersecting regions in a tablet.
+
+        Args:
+            record: TabletRecord to check
+
+        Returns:
+            Report with overlapping region pairs and intersection details
+        """
+        report = {
+            "tablet_id": record.tablet_id,
+            "total_regions": len(record.regions),
+            "overlapping_pairs": [],
+            "has_overlaps": False,
+        }
+
+        regions = record.regions
+        for i in range(len(regions)):
+            for j in range(i + 1, len(regions)):
+                region_i = regions[i]
+                region_j = regions[j]
+
+                try:
+                    if region_i.type == "polygon" and region_j.type == "polygon":
+                        poly_i = Polygon(region_i.coordinates)
+                        poly_j = Polygon(region_j.coordinates)
+                    elif region_i.type == "box" and region_j.type == "box":
+                        # Box format: [[x_min, y_min], [x_max, y_max]]
+                        poly_i = box(
+                            region_i.coordinates[0][0],
+                            region_i.coordinates[0][1],
+                            region_i.coordinates[1][0],
+                            region_i.coordinates[1][1],
+                        )
+                        poly_j = box(
+                            region_j.coordinates[0][0],
+                            region_j.coordinates[0][1],
+                            region_j.coordinates[1][0],
+                            region_j.coordinates[1][1],
+                        )
+                    else:
+                        continue
+
+                    if poly_i.intersects(poly_j):
+                        intersection = poly_i.intersection(poly_j)
+                        report["overlapping_pairs"].append(
+                            {
+                                "region_i": region_i.region_id,
+                                "region_j": region_j.region_id,
+                                "intersection_area": float(intersection.area),
+                                "region_i_area": float(poly_i.area),
+                                "region_j_area": float(poly_j.area),
+                                "overlap_percent_i": (
+                                    float(intersection.area) / float(poly_i.area) * 100
+                                    if poly_i.area > 0
+                                    else 0
+                                ),
+                                "overlap_percent_j": (
+                                    float(intersection.area) / float(poly_j.area) * 100
+                                    if poly_j.area > 0
+                                    else 0
+                                ),
+                            }
+                        )
+                        report["has_overlaps"] = True
+
+                except Exception as e:
+                    logger.warning(
+                        f"Error checking overlap between {region_i.region_id} and {region_j.region_id}: {e}"
+                    )
+
+        return report
+
+    def check_bounds_validity(self, record: TabletRecord, image_width: int = 1024, image_height: int = 768) -> dict[str, Any]:
+        """
+        Validate that all regions are within valid bounds.
+
+        Args:
+            record: TabletRecord to check
+            image_width: Expected image width
+            image_height: Expected image height
+
+        Returns:
+            Report with out-of-bounds regions and invalid coordinates
+        """
+        report = {
+            "tablet_id": record.tablet_id,
+            "image_width": image_width,
+            "image_height": image_height,
+            "total_regions": len(record.regions),
+            "invalid_regions": [],
+            "has_errors": False,
+        }
+
+        for region in record.regions:
+            issues = []
+
+            for i, coord in enumerate(region.coordinates):
+                if len(coord) != 2:
+                    issues.append(f"Coordinate {i} has {len(coord)} values (expected 2)")
+                    report["has_errors"] = True
+
+                x, y = coord
+                if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+                    issues.append(f"Coordinate {i} has non-numeric values: {coord}")
+                    report["has_errors"] = True
+                elif x < 0 or x > image_width:
+                    issues.append(
+                        f"Coordinate {i} x={x} out of bounds [0, {image_width}]"
+                    )
+                    report["has_errors"] = True
+                elif y < 0 or y > image_height:
+                    issues.append(
+                        f"Coordinate {i} y={y} out of bounds [0, {image_height}]"
+                    )
+                    report["has_errors"] = True
+
+            if issues:
+                report["invalid_regions"].append(
+                    {
+                        "region_id": region.region_id,
+                        "type": region.type,
+                        "coord_count": len(region.coordinates),
+                        "issues": issues,
+                    }
+                )
+
+        return report
+
+    def generate_quality_report(self, record: TabletRecord, image_width: int = 1024, image_height: int = 768) -> dict[str, Any]:
+        """
+        Generate comprehensive data quality report.
+
+        Args:
+            record: TabletRecord to analyze
+            image_width: Expected image width
+            image_height: Expected image height
+
+        Returns:
+            Comprehensive quality report
+        """
+        overlap_report = self.check_overlapping_regions(record)
+        bounds_report = self.check_bounds_validity(record, image_width, image_height)
+
+        report = {
+            "tablet_id": record.tablet_id,
+            "quality_score": 100.0,
+            "quality_status": "pass",
+            "checks": {
+                "overlapping_regions": overlap_report,
+                "bounds_validity": bounds_report,
+            },
+            "issues": [],
+        }
+
+        # Deduct points for issues
+        if overlap_report["has_overlaps"]:
+            penalty = len(overlap_report["overlapping_pairs"]) * 5
+            report["quality_score"] -= penalty
+            report["issues"].append(
+                f"{len(overlap_report['overlapping_pairs'])} overlapping region pairs"
+            )
+
+        if bounds_report["has_errors"]:
+            penalty = len(bounds_report["invalid_regions"]) * 10
+            report["quality_score"] -= penalty
+            report["issues"].append(
+                f"{len(bounds_report['invalid_regions'])} regions with invalid coordinates"
+            )
+
+        # Regions with uncertainty or damage marks
+        uncertain_regions = sum(1 for r in record.regions if r.uncertain)
+        damaged_regions = sum(1 for r in record.regions if r.damaged)
+        if uncertain_regions > 0:
+            report["issues"].append(f"{uncertain_regions} uncertain region(s)")
+        if damaged_regions > 0:
+            report["issues"].append(f"{damaged_regions} damaged region(s)")
+
+        report["quality_score"] = max(0, report["quality_score"])
+        if report["quality_score"] < 50:
+            report["quality_status"] = "fail"
+        elif report["quality_score"] < 80:
+            report["quality_status"] = "warning"
+        else:
+            report["quality_status"] = "pass"
+
+        return report
 
 
 def main():

@@ -1,5 +1,6 @@
 """Data I/O: import, export, and versioning of tablets and annotations."""
 
+from .iaa import IAA, AnnotatorComparison
 from .pipeline import (
     DataPipeline,
     Region,
@@ -14,4 +15,6 @@ __all__ = [
     "TabletProvenance",
     "TabletMetadata",
     "Region",
+    "IAA",
+    "AnnotatorComparison",
 ]
