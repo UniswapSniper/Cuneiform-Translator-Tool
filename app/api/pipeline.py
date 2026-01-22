@@ -1,9 +1,9 @@
 """Pipeline control API endpoints."""
 from flask import request, jsonify
 from datetime import datetime
-from app import db
-from app.models import PipelineRun, PipelineStep
-from app.api import pipeline_bp
+from .. import db
+from ..models import PipelineRun, PipelineStep
+from . import pipeline_bp
 
 
 @pipeline_bp.route('/status', methods=['GET'])
@@ -52,7 +52,7 @@ def start_pipeline():
     db.session.commit()
     
     # Emit event for background task to start
-    from app import socketio
+    from .. import socketio
     socketio.emit('pipeline:start', {
         'run_id': run.id,
         'config': run.config,
@@ -80,7 +80,7 @@ def cancel_pipeline(run_id):
     db.session.commit()
     
     # Emit cancellation event
-    from app import socketio
+    from .. import socketio
     socketio.emit('pipeline:cancel', {'run_id': run.id})
     
     return jsonify({'status': 'cancelled'}), 200

@@ -1,9 +1,9 @@
 """Analytics and statistics API endpoints."""
 from flask import jsonify
 from sqlalchemy import func
-from app import db
-from app.models import PipelineRun, TrainedModel, Tablet, Annotation
-from app.api import analytics_bp
+from .. import db
+from ..models import PipelineRun, TrainedModel, Tablet, Annotation
+from . import analytics_bp
 
 
 @analytics_bp.route('/summary', methods=['GET'])

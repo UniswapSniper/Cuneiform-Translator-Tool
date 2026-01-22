@@ -3,7 +3,7 @@ services:
     name: cuneiform-api
     runtime: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt && pip install gunicorn eventlet
+    buildCommand: pip install -r requirements.txt && pip install gunicorn eventlet
     startCommand: gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:$PORT --timeout 120 --access-logfile - wsgi:app
     envVars:
       - key: FLASK_ENV
