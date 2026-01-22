@@ -10,18 +10,20 @@ This project aims to build a comprehensive pipeline for digitizing, annotating, 
 **MVP target:** Full tablet → transliteration workflow with manual review  
 **Future phases:** ML-powered sign recognition, English glossing, web UI
 
-## Project Status: Steps 1-3 Complete ✅
+## Project Status: Steps 1-4 Complete ✅
 
 ### Recent Completions
 
 - **Step 1 (Dec 2025)**: CDLI REST API integration framework with mock data fallback
 - **Step 2 (Jan 21, 2026)**: Data quality checks & inter-annotator agreement metrics
 - **Step 3 (Jan 21, 2026)**: YOLOv8 baseline sign detection model training pipeline
+- **Step 4 (Jan 21, 2026)**: 3D rendering & augmentation pipeline for improved model training
 
 See [docs/](docs/) for detailed step documentation:
 - [CDLI_API_INTEGRATION.md](docs/CDLI_API_INTEGRATION.md)
 - [STEP2_DATA_QUALITY_AND_IAA.md](docs/STEP2_DATA_QUALITY_AND_IAA.md)
 - [STEP3_YOLOV8_BASELINE.md](docs/STEP3_YOLOV8_BASELINE.md)
+- [STEP4_3D_RENDERING_AUGMENTATION.md](docs/STEP4_3D_RENDERING_AUGMENTATION.md)
 
 ## Quick Start
 
@@ -136,14 +138,14 @@ This project builds on established research:
 
 ## Current focus
 
-### M0 (MVP Foundation) — ~85% Complete
+### M0 (MVP Foundation) — ~95% Complete
 - ✅ Project structure & module layout
 - ✅ Annotation format schema
 - ✅ Data pipeline from CDLI API
 - ✅ Annotation CLI tool with region management
 - ✅ Data quality validation & IAA metrics
 - ✅ YOLO dataset conversion & training pipeline
-- 🚧 3D rendering (GigaMesh) — deferred to M2
+- ✅ 3D rendering & augmentation pipeline (GigaMesh-ready)
 - 🚧 CI/CD & test automation
 
 ### M1 (Annotation Workflow) — ~90% Complete
