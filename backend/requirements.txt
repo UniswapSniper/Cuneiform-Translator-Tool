@@ -12,5 +12,4 @@ gunicorn==21.2.0
 eventlet==0.33.3
 # PostgreSQL support
 psycopg2-binary==2.9.9
-# Browser automation
-selenium==4.16.0
+

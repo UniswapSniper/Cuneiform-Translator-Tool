@@ -33,14 +33,13 @@ def create_app(config_name='development'):
     CORS(app, origins=app.config['CORS_ORIGINS'])
     
     # Register blueprints
-    from .api import pipeline_bp, models_bp, tablets_bp, analytics_bp, health_bp, test_bp, browser_bp
+    from .api import pipeline_bp, models_bp, tablets_bp, analytics_bp, health_bp, test_bp
     app.register_blueprint(health_bp)
     app.register_blueprint(pipeline_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(tablets_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(test_bp)
-    app.register_blueprint(browser_bp)
     
     # Register SocketIO handlers
     from .websocket import register_handlers
