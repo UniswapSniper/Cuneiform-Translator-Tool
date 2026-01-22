@@ -6,7 +6,7 @@ export function useWebSocket(url?: string) {
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    const socketURL = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
+    const socketURL = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001'
     
     socketRef.current = io(socketURL, {
       reconnection: true,

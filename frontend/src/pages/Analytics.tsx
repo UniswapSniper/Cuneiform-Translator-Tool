@@ -1,5 +1,5 @@
 import { Card } from '../components/Card'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 export default function Analytics() {
   const trainingData = [
@@ -88,7 +88,7 @@ export default function Analytics() {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {qualityData.map((entry, index) => (
+                {qualityData.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
                 ))}
               </Pie>

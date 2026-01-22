@@ -1,18 +1,36 @@
 {
-  "timestamp": "2026-01-21T22:15:15.051470",
-  "total_execution_time_seconds": 0.43871188163757324,
+  "timestamp": "2026-01-21T22:20:07.438891",
+  "total_execution_time_seconds": 0.9342458248138428,
   "step_times": {
-    "training": 0.4037942886352539
+    "download": 0.19405198097229004,
+    "annotation": 0.0007228851318359375,
+    "quality_check": 0.2907552719116211,
+    "training": 0.412930965423584,
+    "evaluation": 0.00029015541076660156
   },
   "results": {
+    "download": {
+      "status": "failed",
+      "error": "/Users/jeffgoldner/Documents/CuniformTranslator/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020\n  warnings.warn(\nusage: download_cdli_tablets.py [-h] [--period PERIOD] [--limit LIMIT]\n                                [--language LANGUAGE] [--cache-dir CACHE_DIR]\ndownload_cdli_tablets.py: error: unrecognized arguments: --num-tablets 50 --output-dir /Users/jeffgoldner/Documents/CuniformTranslator/data/raw/cdli\n"
+    },
+    "annotation": {
+      "status": "completed",
+      "count": 2
+    },
+    "quality_check": {
+      "status": "failed"
+    },
     "training": {
       "status": "success",
       "model_size": "m",
-      "epochs": 1,
-      "batch_size": 2,
+      "epochs": 50,
+      "batch_size": 16,
       "device": "mps",
       "augmentation_enabled": true,
       "trained_baseline": false
+    },
+    "evaluation": {
+      "status": "no_model"
     }
   }
 }

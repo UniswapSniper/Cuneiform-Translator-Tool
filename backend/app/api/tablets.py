@@ -1,7 +1,7 @@
 """Tablet gallery API endpoints."""
 from flask import request, jsonify
-from app import db
-from app.models import Tablet, Annotation
+from .. import db
+from ..models import Tablet, Annotation
 from . import tablets_bp
 
 

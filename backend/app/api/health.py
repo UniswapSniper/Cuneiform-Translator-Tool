@@ -18,7 +18,7 @@ def readiness_check():
     """Check if API is ready to accept requests."""
     try:
         # Check database
-        from app import db
+        from .. import db
         db.session.execute('SELECT 1')
         
         return jsonify({
