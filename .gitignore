@@ -45,7 +45,7 @@ data/raw/
 # ML artifacts (too large for git; use DVC later)
 *.pt
 *.pth
-models/
+/models/
 checkpoints/
 
 # System
