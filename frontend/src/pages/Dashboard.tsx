@@ -1,6 +1,9 @@
 import { WebSocketTest } from '../components/WebSocketTest'
+import { useAnalytics } from '../hooks/useAnalytics'
 
 export default function Dashboard() {
+  const analytics = useAnalytics(30000)
+
   return (
     <div className="page-container">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Welcome to Cuneiform Translator</h1>
@@ -13,19 +16,27 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div className="card">
           <p className="text-gray-600 font-medium">Total Tablets</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">324</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {analytics.loading ? '...' : analytics.data?.total_tablets || 0}
+          </p>
         </div>
         <div className="card">
           <p className="text-gray-600 font-medium">Models Trained</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">12</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {analytics.loading ? '...' : analytics.data?.total_models || 0}
+          </p>
         </div>
         <div className="card">
           <p className="text-gray-600 font-medium">Pipeline Runs</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">156</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {analytics.loading ? '...' : analytics.data?.total_pipeline_runs || 0}
+          </p>
         </div>
         <div className="card">
           <p className="text-gray-600 font-medium">Avg mAP Score</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">0.847</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {analytics.loading ? '...' : analytics.data?.average_mAP.toFixed(3) || '0.000'}
+          </p>
         </div>
       </div>
 
@@ -57,6 +68,16 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {analytics.error && (
+        <div className="mt-8 p-4 bg-amber-100 border border-amber-400 rounded-lg text-amber-900">
+          <p className="font-semibold">⚠️ Analytics Data Error</p>
+          <p className="text-sm">{analytics.error}</p>
+          <p className="text-xs text-amber-800 mt-1">
+            Last updated: {analytics.lastUpdated ? new Date(analytics.lastUpdated).toLocaleTimeString() : 'Never'}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

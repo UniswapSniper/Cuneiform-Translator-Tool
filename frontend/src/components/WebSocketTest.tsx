@@ -6,7 +6,7 @@ export function WebSocketTest() {
   const [runId, setRunId] = useState<number>(1)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const store = usePipelineStore()
-  const socket = usePipelineWebSocket(isSubscribed ? runId : undefined)
+  usePipelineWebSocket(isSubscribed ? runId : undefined)
 
   const handleStartTest = async () => {
     setIsSubscribed(true)
