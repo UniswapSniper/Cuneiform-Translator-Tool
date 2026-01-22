@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cuneiform-translator"
+version = "0.0.1"
+description = "Translating ancient Sumerian cuneiform tablets."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Cuneiform Team", email = "team@example.com"},
+]
+
+dependencies = [
+    # Data + config
+    "pydantic>=2.0",
+    "requests>=2.31",
+    # Vision (to be pinned)
+    "opencv-python>=4.8",
+    "Pillow>=10.0",
+    # ML (optional, for later phases)
+    # "torch>=2.0",
+    # "torchvision>=0.16",
+    # "transformers>=4.30",
+    # UI (for later)
+    # "streamlit>=1.28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.7",
+    "isort>=5.12",
+    "ruff>=0.0.285",
+    "mypy>=1.5",
+]
+ml = [
+    "torch>=2.0",
+    "torchvision>=0.16",
+    "transformers>=4.30",
+]
+ui = [
+    "streamlit>=1.28",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/cuneiform-translator"
+Documentation = "https://github.com/yourusername/cuneiform-translator#readme"
+Repository = "https://github.com/yourusername/cuneiform-translator.git"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

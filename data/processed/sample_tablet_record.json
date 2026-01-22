@@ -1,0 +1,31 @@
+{
+  "tablet_id": "sample_001",
+  "provenance": {
+    "museum_id": "CBS:XXXX",
+    "museum": "University of Pennsylvania",
+    "period": "Ur III",
+    "source_url": "https://cdli.ucla.edu/search",
+    "source_license": "CC0 1.0 Universal (Public Domain)"
+  },
+  "image_paths": {
+    "primary": "data/raw/cdli/sample_001_obverse.jpg"
+  },
+  "regions": [
+    {
+      "region_id": "r001",
+      "type": "polygon",
+      "coordinates": [[10, 20], [50, 20], [50, 60], [10, 60]],
+      "sign_candidate": "RA",
+      "transliteration": "ra",
+      "notes": "possibly damaged top left",
+      "annotated_by": "user@example.com",
+      "timestamp": "2026-01-21T10:30:00Z"
+    }
+  ],
+  "metadata": {
+    "language": "Sumerian",
+    "genre": "administrative",
+    "date_created": "2026-01-21",
+    "status": "draft"
+  }
+}
