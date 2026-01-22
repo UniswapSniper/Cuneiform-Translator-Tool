@@ -1,0 +1,9 @@
+# cuneiform-signs dataset
+path: /Users/jeffgoldner/Documents/CuniformTranslator/data/yolo_dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
+nc: 1  # Number of classes
+names: ['cuneiform_sign']  # Class names

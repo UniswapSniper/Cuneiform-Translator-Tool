@@ -38,6 +38,11 @@ dev = [
     "ruff>=0.0.285",
     "mypy>=1.5",
 ]
+vision = [
+    "ultralytics>=8.0",
+    "torch>=2.0",
+    "torchvision>=0.16",
+]
 ml = [
     "torch>=2.0",
     "torchvision>=0.16",
