@@ -1,6 +1,18 @@
 {
-  "timestamp": "2026-01-21T21:46:22.360713",
-  "total_execution_time_seconds": 0.033351898193359375,
-  "step_times": {},
-  "results": {}
+  "timestamp": "2026-01-21T22:15:15.051470",
+  "total_execution_time_seconds": 0.43871188163757324,
+  "step_times": {
+    "training": 0.4037942886352539
+  },
+  "results": {
+    "training": {
+      "status": "success",
+      "model_size": "m",
+      "epochs": 1,
+      "batch_size": 2,
+      "device": "mps",
+      "augmentation_enabled": true,
+      "trained_baseline": false
+    }
+  }
 }
