@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { usePipelineWebSocket } from '../hooks/useWebSocket'
 import { usePipelineStore } from '../stores/websocketStore'
-import { API_BASE_URL } from '../lib/constants'
+import { API_BASE_URL, isApiAvailable, reportApiFailure, reportApiSuccess } from '../lib/constants'
 
 export function WebSocketTest() {
   const [runId, setRunId] = useState<number>(1)
@@ -10,6 +10,10 @@ export function WebSocketTest() {
   usePipelineWebSocket(isSubscribed ? runId : undefined)
 
   const handleStartTest = async () => {
+    if (!isApiAvailable() || !API_BASE_URL) {
+      console.warn('Backend unavailable - skipping test')
+      return
+    }
     setIsSubscribed(true)
     setRunId(1)
 
@@ -25,13 +29,19 @@ export function WebSocketTest() {
         }),
       })
       const data = await response.json()
+      reportApiSuccess()
       console.log('Test events sent:', data)
     } catch (error) {
-      console.error('Failed to start test:', error)
+      reportApiFailure()
+      console.warn('Failed to start test:', error)
     }
   }
 
   const handleSendMetrics = async () => {
+    if (!isApiAvailable() || !API_BASE_URL) {
+      console.warn('Backend unavailable - skipping metrics')
+      return
+    }
     try {
       await fetch(`${API_BASE_URL}/test/websocket/stream`, {
         method: 'POST',
@@ -42,8 +52,10 @@ export function WebSocketTest() {
           event_type: 'batch',
         }),
       })
+      reportApiSuccess()
     } catch (error) {
-      console.error('Failed to send metrics:', error)
+      reportApiFailure()
+      console.warn('Failed to send metrics:', error)
     }
   }
 

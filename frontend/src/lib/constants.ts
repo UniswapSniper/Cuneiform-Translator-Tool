@@ -29,6 +29,30 @@ export const SOCKET_URL: string | null = configuredSocketUrl
 // Flag to indicate if backend is configured
 export const IS_BACKEND_CONFIGURED = API_BASE_URL !== null && SOCKET_URL !== null
 
+/**
+ * Global API availability tracking - prevents cascading failures across components
+ */
+let globalApiFailureCount = 0
+let globalApiCircuitOpen = false
+const GLOBAL_MAX_FAILURES = 2  // Very aggressive - 2 failures and we stop
+
+export function isApiAvailable(): boolean {
+    return !globalApiCircuitOpen && IS_BACKEND_CONFIGURED
+}
+
+export function reportApiFailure(): void {
+    globalApiFailureCount++
+    if (globalApiFailureCount >= GLOBAL_MAX_FAILURES && !globalApiCircuitOpen) {
+        globalApiCircuitOpen = true
+        console.warn(`[API] Global circuit breaker opened after ${GLOBAL_MAX_FAILURES} failures. All API calls disabled.`)
+    }
+}
+
+export function reportApiSuccess(): void {
+    globalApiFailureCount = 0
+    // Don't auto-reset circuit - require page reload
+}
+
 // Only log in development, and only once
 if (isDevelopment) {
     console.log('Environment Config:', {
