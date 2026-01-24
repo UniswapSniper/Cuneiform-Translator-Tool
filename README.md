@@ -112,6 +112,31 @@ ruff check src/ tests/
 mypy src/
 ```
 
+## Deployment Configuration
+
+The application uses a split deployment architecture:
+- **Frontend**: Deployed on Vercel (React + Vite)
+- **Backend**: Deployed on Render (Flask + SocketIO)
+
+### Required Environment Variables
+
+#### Vercel (Frontend)
+Set these in your Vercel project settings:
+```
+VITE_API_URL=https://your-backend-domain.onrender.com/api
+VITE_SOCKET_URL=https://your-backend-domain.onrender.com
+```
+
+#### Render (Backend)
+Set these in your Render service settings:
+```
+FLASK_ENV=production
+SECRET_KEY=your-random-secret-key
+CORS_ORIGINS=https://your-frontend.vercel.app
+```
+
+> **Note**: The frontend gracefully handles missing backend configuration. If environment variables are not set on an HTTPS deployment, the UI will show "Disconnected" status without crashing.
+
 ## Project structure
 
 ```

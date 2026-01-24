@@ -1,19 +1,29 @@
 import { useEffect, useRef } from 'react'
 import io, { Socket } from 'socket.io-client'
 import { usePipelineStore } from '../stores/websocketStore'
+import { SOCKET_URL, IS_BACKEND_CONFIGURED } from '../lib/constants'
 
 export function useWebSocket(url?: string) {
   const socketRef = useRef<Socket | null>(null)
   const { setConnected, setConnectionError } = usePipelineStore()
 
   useEffect(() => {
-    const socketURL = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001'
-    
+    const socketURL = url || SOCKET_URL
+
+    // Guard: Don't attempt connection if no valid URL
+    if (!socketURL) {
+      console.warn('WebSocket: No backend URL configured. Skipping connection.')
+      setConnected(false)
+      setConnectionError('Backend not configured')
+      return
+    }
+
     socketRef.current = io(socketURL, {
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,        // Start with 2 second delay
+      reconnectionDelayMax: 30000,    // Max 30 seconds between attempts
+      reconnectionAttempts: 3,        // Only try 3 times (reduced from 5)
+      timeout: 10000,                 // 10 second timeout
     })
 
     socketRef.current.on('connect', () => {
@@ -28,8 +38,15 @@ export function useWebSocket(url?: string) {
     })
 
     socketRef.current.on('error', (data: any) => {
-      console.error('WebSocket error:', data)
+      // Use warn instead of error to reduce console noise
+      console.warn('WebSocket connection issue:', data?.message || 'Connection error')
       setConnectionError(data?.message || 'WebSocket connection error')
+    })
+
+    socketRef.current.on('connect_error', (error: Error) => {
+      // Log only once per error type to reduce console spam
+      console.warn('WebSocket connect error:', error.message)
+      setConnectionError(error.message)
     })
 
     return () => {

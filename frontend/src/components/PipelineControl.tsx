@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePipelineControlStore } from '../stores/pipelineControlStore'
 import { usePipelineWebSocket } from '../hooks/useWebSocket'
 import { usePipelineStore } from '../stores/websocketStore'
@@ -8,6 +8,10 @@ export function PipelineControl() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const control = usePipelineControlStore()
   const pipeline = usePipelineStore()
+
+  useEffect(() => {
+    control.fetchRuns()
+  }, [])
 
   usePipelineWebSocket(control.currentRun?.id)
 
@@ -114,9 +118,8 @@ export function PipelineControl() {
             <div className="text-right">
               <p className="text-sm text-gray-600">Status</p>
               <p
-                className={`text-lg font-bold ${
-                  isRunning ? 'text-green-600' : 'text-amber-600'
-                }`}
+                className={`text-lg font-bold ${isRunning ? 'text-green-600' : 'text-amber-600'
+                  }`}
               >
                 {control.currentRun.status.toUpperCase()}
               </p>
@@ -191,13 +194,12 @@ export function PipelineControl() {
                 {pipeline.logs.slice(-20).map((log, idx) => (
                   <div
                     key={idx}
-                    className={`${
-                      log.level === 'error'
+                    className={`${log.level === 'error'
                         ? 'text-red-400'
                         : log.level === 'warning'
                           ? 'text-amber-400'
                           : 'text-green-400'
-                    }`}
+                      }`}
                   >
                     <span className="text-gray-500">[{log.level.toUpperCase()}]</span> {log.message}
                   </div>
@@ -239,15 +241,14 @@ export function PipelineControl() {
                 </div>
                 <div className="text-right">
                   <span
-                    className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                      run.status === 'completed'
+                    className={`inline-block px-2 py-1 text-xs font-semibold rounded ${run.status === 'completed'
                         ? 'bg-green-100 text-green-800'
                         : run.status === 'failed'
                           ? 'bg-red-100 text-red-800'
                           : run.status === 'running'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-100 text-gray-800'
-                    }`}
+                      }`}
                   >
                     {run.status}
                   </span>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { usePipelineWebSocket } from '../hooks/useWebSocket'
 import { usePipelineStore } from '../stores/websocketStore'
+import { API_BASE_URL } from '../lib/constants'
 
 export function WebSocketTest() {
   const [runId, setRunId] = useState<number>(1)
@@ -14,7 +15,7 @@ export function WebSocketTest() {
 
     // Simulate pipeline events
     try {
-      const response = await fetch('http://localhost:5001/api/test/websocket/stream', {
+      const response = await fetch(`${API_BASE_URL}/test/websocket/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -32,7 +33,7 @@ export function WebSocketTest() {
 
   const handleSendMetrics = async () => {
     try {
-      await fetch('http://localhost:5001/api/test/websocket/stream', {
+      await fetch(`${API_BASE_URL}/test/websocket/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

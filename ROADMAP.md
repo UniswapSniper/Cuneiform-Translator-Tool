@@ -202,7 +202,7 @@ Build an open-source pipeline to digitize, annotate, and translate ancient cunei
 
 | Milestone | Target date | Status |
 |-----------|-------------|--------|
-| M0: MVP Foundation | Jan 31, 2026 | 🚧 In progress |
+| M0: MVP Foundation | Jan 31, 2026 | ✅ Complete |
 | M1: Enhanced Annotation | Mar 15, 2026 | ⏳ Pending |
 | M2: ML Infrastructure | Apr 30, 2026 | ⏳ Pending |
 | M3: Web UI & Community | May 31, 2026 | ⏳ Pending |
@@ -273,4 +273,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup.
 
 ---
 
-Last updated: 2026-01-21
+Last updated: 2026-01-23

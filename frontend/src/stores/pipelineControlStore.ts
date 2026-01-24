@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { API_BASE_URL } from '../lib/constants'
 
 export interface PipelineConfig {
   [key: string]: unknown
@@ -18,18 +19,18 @@ interface PipelineControlStore {
   // Current run
   currentRun: PipelineRun | null
   runs: PipelineRun[]
-  
+
   // Loading states
   isStarting: boolean
   isCancelling: boolean
   isLoading: boolean
   error: string | null
-  
+
   // Actions
   setCurrentRun: (run: PipelineRun | null) => void
   setRuns: (runs: PipelineRun[]) => void
   setError: (error: string | null) => void
-  
+
   // Async actions
   startPipeline: (name: string, config?: PipelineConfig) => Promise<PipelineRun>
   cancelPipeline: (runId: number) => Promise<void>
@@ -38,7 +39,7 @@ interface PipelineControlStore {
   reset: () => void
 }
 
-const API_BASE = 'http://localhost:5001/api'
+
 
 export const usePipelineControlStore = create<PipelineControlStore>((set) => ({
   currentRun: null,
@@ -55,7 +56,7 @@ export const usePipelineControlStore = create<PipelineControlStore>((set) => ({
   startPipeline: async (name, config = {}) => {
     set({ isStarting: true, error: null })
     try {
-      const response = await fetch(`${API_BASE}/pipeline/start`, {
+      const response = await fetch(`${API_BASE_URL}/pipeline/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, config }),
@@ -94,7 +95,7 @@ export const usePipelineControlStore = create<PipelineControlStore>((set) => ({
   cancelPipeline: async (runId) => {
     set({ isCancelling: true, error: null })
     try {
-      const response = await fetch(`${API_BASE}/pipeline/${runId}/cancel`, {
+      const response = await fetch(`${API_BASE_URL}/pipeline/${runId}/cancel`, {
         method: 'POST',
       })
 
@@ -122,7 +123,7 @@ export const usePipelineControlStore = create<PipelineControlStore>((set) => ({
   fetchRuns: async () => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(`${API_BASE}/pipeline/status`)
+      const response = await fetch(`${API_BASE_URL}/pipeline/status`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch runs: ${response.status}`)
@@ -141,7 +142,7 @@ export const usePipelineControlStore = create<PipelineControlStore>((set) => ({
   fetchRunDetails: async (runId) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(`${API_BASE}/pipeline/${runId}`)
+      const response = await fetch(`${API_BASE_URL}/pipeline/${runId}`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch run details: ${response.status}`)
