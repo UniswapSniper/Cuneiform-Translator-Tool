@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { API_BASE_URL } from './constants'
 
-const baseURL = API_BASE_URL
+// Convert null to undefined for axios compatibility
+const baseURL = API_BASE_URL ?? undefined
 
 const apiClient: AxiosInstance = axios.create({
   baseURL,

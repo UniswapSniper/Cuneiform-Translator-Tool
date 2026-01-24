@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import io, { Socket } from 'socket.io-client'
 import { usePipelineStore } from '../stores/websocketStore'
-import { SOCKET_URL, IS_BACKEND_CONFIGURED } from '../lib/constants'
+import { SOCKET_URL } from '../lib/constants'
 
 export function useWebSocket(url?: string) {
   const socketRef = useRef<Socket | null>(null)
