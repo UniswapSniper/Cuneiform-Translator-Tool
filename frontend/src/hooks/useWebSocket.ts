@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react'
 import io, { Socket } from 'socket.io-client'
 import { usePipelineStore } from '../stores/websocketStore'
-import { SOCKET_URL } from '../lib/constants'
+import { SOCKET_URL, isApiAvailable, reportApiFailure } from '../lib/constants'
+
+// Track if we've already tried to connect and failed
+let hasAttemptedConnection = false
+let connectionFailed = false
 
 export function useWebSocket(url?: string) {
   const socketRef = useRef<Socket | null>(null)
@@ -12,41 +16,55 @@ export function useWebSocket(url?: string) {
 
     // Guard: Don't attempt connection if no valid URL
     if (!socketURL) {
-      console.warn('WebSocket: No backend URL configured. Skipping connection.')
       setConnected(false)
       setConnectionError('Backend not configured')
       return
     }
 
+    // Guard: Don't retry if previous connection already failed
+    if (connectionFailed || !isApiAvailable()) {
+      setConnected(false)
+      setConnectionError('Backend unavailable')
+      return
+    }
+
+    // Guard: Only attempt connection once per page load
+    if (hasAttemptedConnection && socketRef.current === null) {
+      setConnected(false)
+      return
+    }
+
+    hasAttemptedConnection = true
+
     socketRef.current = io(socketURL, {
-      reconnection: true,
-      reconnectionDelay: 2000,        // Start with 2 second delay
-      reconnectionDelayMax: 30000,    // Max 30 seconds between attempts
-      reconnectionAttempts: 3,        // Only try 3 times (reduced from 5)
-      timeout: 10000,                 // 10 second timeout
+      reconnection: false,        // DISABLE reconnection entirely
+      timeout: 5000,              // 5 second timeout (shorter)
+      autoConnect: true,
     })
 
     socketRef.current.on('connect', () => {
-      console.log('✅ Connected to WebSocket')
       setConnected(true)
       setConnectionError(null)
     })
 
     socketRef.current.on('disconnect', () => {
-      console.log('❌ Disconnected from WebSocket')
       setConnected(false)
     })
 
-    socketRef.current.on('error', (data: any) => {
-      // Use warn instead of error to reduce console noise
-      console.warn('WebSocket connection issue:', data?.message || 'Connection error')
-      setConnectionError(data?.message || 'WebSocket connection error')
+    socketRef.current.on('error', () => {
+      connectionFailed = true
+      reportApiFailure()
+      setConnectionError('WebSocket connection error')
     })
 
-    socketRef.current.on('connect_error', (error: Error) => {
-      // Log only once per error type to reduce console spam
-      console.warn('WebSocket connect error:', error.message)
-      setConnectionError(error.message)
+    socketRef.current.on('connect_error', () => {
+      connectionFailed = true
+      reportApiFailure()
+      setConnected(false)
+      setConnectionError('Connection failed')
+      // Disconnect immediately to prevent retries
+      socketRef.current?.disconnect()
+      socketRef.current = null
     })
 
     return () => {
