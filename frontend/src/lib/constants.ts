@@ -30,34 +30,32 @@ export const SOCKET_URL: string | null = configuredSocketUrl
 export const IS_BACKEND_CONFIGURED = API_BASE_URL !== null && SOCKET_URL !== null
 
 /**
- * Global API availability tracking - prevents cascading failures across components
+ * Global API availability tracking
+ * START WITH CIRCUIT CLOSED - don't allow ANY API calls until health check passes
  */
-let globalApiFailureCount = 0
-let globalApiCircuitOpen = false
-const GLOBAL_MAX_FAILURES = 2  // Very aggressive - 2 failures and we stop
+let globalApiCircuitOpen = true  // Start CLOSED (blocked) by default
 
 export function isApiAvailable(): boolean {
     return !globalApiCircuitOpen && IS_BACKEND_CONFIGURED
 }
 
 export function reportApiFailure(): void {
-    globalApiFailureCount++
-    if (globalApiFailureCount >= GLOBAL_MAX_FAILURES && !globalApiCircuitOpen) {
+    if (!globalApiCircuitOpen) {
         globalApiCircuitOpen = true
-        console.warn(`[API] Global circuit breaker opened after ${GLOBAL_MAX_FAILURES} failures. All API calls disabled.`)
+        console.warn('[API] Backend unavailable - all API calls disabled')
     }
 }
 
 export function reportApiSuccess(): void {
-    globalApiFailureCount = 0
-    // Don't auto-reset circuit - require page reload
+    globalApiCircuitOpen = false
 }
 
-// Only log in development, and only once
+// Only log in development
 if (isDevelopment) {
     console.log('Environment Config:', {
         API_BASE_URL: API_BASE_URL || '(not configured)',
         SOCKET_URL: SOCKET_URL || '(not configured)',
-        IS_BACKEND_CONFIGURED
+        IS_BACKEND_CONFIGURED,
+        initialCircuitState: 'CLOSED (all API calls blocked)'
     })
 }
