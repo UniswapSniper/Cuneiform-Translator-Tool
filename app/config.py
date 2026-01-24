@@ -18,6 +18,14 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # SQLAlchemy pool configuration for threading compatibility
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Verify connections before using
+        'pool_recycle': 300,     # Recycle connections after 5 minutes
+        'pool_size': 10,         # Connection pool size
+        'max_overflow': 20,      # Max overflow connections
+    }
+    
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_COOKIE_SECURE = True
@@ -32,7 +40,7 @@ class Config:
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5173').split(',')
     
     # SocketIO
-    SOCKETIO_MESSAGE_QUEUE = os.environ.get('SOCKETIO_MESSAGE_QUEUE', 'redis://localhost:6379')
+    SOCKETIO_MESSAGE_QUEUE = os.environ.get('SOCKETIO_MESSAGE_QUEUE', None)  # None for threading mode
     SOCKETIO_ASYNC_MODE = 'threading'
     
     # Pipeline
@@ -76,3 +84,4 @@ def get_config():
         'production': ProductionConfig,
     }
     return config_map.get(env, DevelopmentConfig)
+
