@@ -3,6 +3,8 @@ import os
 from datetime import timedelta
 
 
+from sqlalchemy.pool import NullPool
+
 class Config:
     """Base configuration."""
     
@@ -18,13 +20,20 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # SQLAlchemy pool configuration for threading compatibility
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,  # Verify connections before using
-        'pool_recycle': 300,     # Recycle connections after 5 minutes
-        'pool_size': 10,         # Connection pool size
-        'max_overflow': 20,      # Max overflow connections
-    }
+    # SQLAlchemy pool configuration
+    # Use NullPool for SQLite to avoid locking errors with Eventlet/Threading
+    if 'sqlite' in SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'poolclass': NullPool,
+        }
+    else:
+        # Postgres/Production pool configuration
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+            'pool_size': 10,
+            'max_overflow': 20,
+        }
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)

@@ -10,7 +10,7 @@ echo ""
 # Test 1: Backend API Health
 echo "✓ Test 1: Checking backend API health..."
 sleep 2
-HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/api/health)
+HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5001/api/health)
 if [ "$HEALTH" = "200" ]; then
   echo "  ✅ Backend API is healthy (HTTP 200)"
 else
@@ -23,7 +23,7 @@ echo ""
 
 # Test 2: Health readiness
 echo "✓ Test 2: Checking backend readiness..."
-READY=$(curl -s http://localhost:5000/api/health/ready | grep -o '"status":"ready"')
+READY=$(curl -s http://localhost:5001/api/health/ready | grep -o '"status":"ready"')
 if [ -n "$READY" ]; then
   echo "  ✅ Backend is ready"
 else
@@ -34,7 +34,7 @@ echo ""
 
 # Test 3: Pipeline status endpoint
 echo "✓ Test 3: Checking pipeline status endpoint..."
-PIPELINES=$(curl -s http://localhost:5000/api/pipeline/status | grep -o '"items"')
+PIPELINES=$(curl -s http://localhost:5001/api/pipeline/status | grep -o '"items"')
 if [ -n "$PIPELINES" ]; then
   echo "  ✅ Pipeline status endpoint working"
 else
@@ -45,7 +45,7 @@ echo ""
 
 # Test 4: Analytics summary endpoint
 echo "✓ Test 4: Checking analytics summary..."
-ANALYTICS=$(curl -s http://localhost:5000/api/analytics/summary | grep -o '"total_pipeline_runs"')
+ANALYTICS=$(curl -s http://localhost:5001/api/analytics/summary | grep -o '"total_pipeline_runs"')
 if [ -n "$ANALYTICS" ]; then
   echo "  ✅ Analytics endpoint working"
 else
