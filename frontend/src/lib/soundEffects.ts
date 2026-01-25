@@ -1,12 +1,7 @@
+import { useState } from 'react'
+
 // Sound effects for the decoding experience
 // Toggle-able via user preference stored in localStorage
-
-const SOUNDS = {
-    scan: '/sounds/scan.mp3',
-    detect: '/sounds/detect.mp3',
-    translate: '/sounds/translate.mp3',
-    complete: '/sounds/complete.mp3',
-}
 
 // Web Audio API for generating sounds programmatically
 class SoundGenerator {
@@ -136,7 +131,7 @@ class SoundGenerator {
     }
 
     // Ambient scanning hum
-    playScanningAmbient(duration: number = 3): () => void {
+    playScanningAmbient(): () => void {
         if (!this.enabled) return () => { }
 
         const ctx = this.getContext()
@@ -187,8 +182,6 @@ export function useSoundEffects() {
         playDetectSound: () => soundEffects.playDetectSound(),
         playTranslateSound: () => soundEffects.playTranslateSound(),
         playCompleteSound: () => soundEffects.playCompleteSound(),
-        playScanningAmbient: (duration?: number) => soundEffects.playScanningAmbient(duration),
+        playScanningAmbient: () => soundEffects.playScanningAmbient(),
     }
 }
-
-import { useState } from 'react'
