@@ -14,13 +14,12 @@ def analyze_tablet(tablet_id):
     if not tablet:
         return jsonify({'error': 'Tablet not found'}), 404
     
-    # Start analysis in background thread
-    thread = threading.Thread(
-        target=_run_analysis,
-        args=(tablet_id,),
-        daemon=True
-    )
-    thread.start()
+    # Get the actual Flask app object to pass to the background task
+    from flask import current_app
+    app = current_app._get_current_object()
+    
+    # Start analysis in background task (Eventlet-safe)
+    socketio.start_background_task(_run_analysis, app, tablet_id)
     
     return jsonify({
         'status': 'started',
@@ -29,106 +28,121 @@ def analyze_tablet(tablet_id):
     }), 202
 
 
-def _run_analysis(tablet_id):
+def _run_analysis(app, tablet_id):
     """Run the analysis process with WebSocket updates."""
     import random
+    import traceback
     
-    with socketio.server.app.app_context():
-        tablet = Tablet.query.get(tablet_id)
-        if not tablet:
-            return
-        
-        room = f'tablet:{tablet_id}'
-        
-        # Phase 1: Scanning (3 seconds)
-        socketio.emit('analysis:phase', {
-            'tablet_id': tablet_id,
-            'phase': 'scanning',
-            'message': 'Initializing neural scan...'
-        }, room=room, namespace='/')
-        
-        for progress in range(0, 101, 5):
-            socketio.emit('analysis:scanning', {
+    with app.app_context():
+        try:
+            tablet = Tablet.query.get(tablet_id)
+            if not tablet:
+                return
+            
+            room = f'tablet:{tablet_id}'
+            
+            # Phase 1: Scanning (3 seconds)
+            socketio.emit('analysis:phase', {
                 'tablet_id': tablet_id,
-                'progress': progress,
-                'scan_line_position': progress  # 0-100 percent of image height
+                'phase': 'scanning',
+                'message': 'Initializing neural scan...'
             }, room=room, namespace='/')
-            time.sleep(0.15)
-        
-        # Phase 2: Detection (detect signs one by one)
-        socketio.emit('analysis:phase', {
-            'tablet_id': tablet_id,
-            'phase': 'detection',
-            'message': 'Detecting cuneiform signs...'
-        }, room=room, namespace='/')
-        
-        # Generate realistic detection boxes
-        signs = _generate_detected_signs(tablet)
-        total_signs = len(signs)
-        
-        for idx, sign in enumerate(signs):
-            socketio.emit('analysis:detection', {
+            
+            for progress in range(0, 101, 5):
+                socketio.emit('analysis:scanning', {
+                    'tablet_id': tablet_id,
+                    'progress': progress,
+                    'scan_line_position': progress  # 0-100 percent of image height
+                }, room=room, namespace='/')
+                time.sleep(0.15)
+            
+            # Phase 2: Detection (detect signs one by one)
+            socketio.emit('analysis:phase', {
                 'tablet_id': tablet_id,
-                'sign': sign,
-                'sign_index': idx,
-                'total_signs': total_signs,
-                'progress': int((idx + 1) / total_signs * 100)
+                'phase': 'detection',
+                'message': 'Detecting cuneiform signs...'
             }, room=room, namespace='/')
-            time.sleep(0.3)  # Staggered reveal
-        
-        # Phase 3: Translation (reveal translation)
-        socketio.emit('analysis:phase', {
-            'tablet_id': tablet_id,
-            'phase': 'translation',
-            'message': 'Decoding ancient text...'
-        }, room=room, namespace='/')
-        
-        # Get translation with source info
-        translation_result = _generate_translation(signs, tablet)
-        translation_text = translation_result.get('translation', 'Translation unavailable')
-        translation_source = translation_result.get('source', 'unknown')
-        translation_confidence = translation_result.get('confidence', 0.5)
-        
-        # Get source-specific message
-        source_messages = {
-            'cdli_scholarly': 'Using verified scholarly translation',
-            'neural_model': 'AI translating never-before-seen text...',
-            'sign_dictionary': 'Translating sign by sign...',
-            'contextual_placeholder': 'Generating contextual interpretation...'
-        }
-        
-        socketio.emit('analysis:phase', {
-            'tablet_id': tablet_id,
-            'phase': 'translation',
-            'message': source_messages.get(translation_source, 'Decoding...')
-        }, room=room, namespace='/')
-        
-        words = translation_text.split(' ')
-        
-        for idx, word in enumerate(words):
-            socketio.emit('analysis:translation', {
+            
+            # Generate realistic detection boxes
+            signs = _generate_detected_signs(tablet)
+            total_signs = len(signs)
+            
+            for idx, sign in enumerate(signs):
+                socketio.emit('analysis:detection', {
+                    'tablet_id': tablet_id,
+                    'sign': sign,
+                    'sign_index': idx,
+                    'total_signs': total_signs,
+                    'progress': int((idx + 1) / total_signs * 100)
+                }, room=room, namespace='/')
+                time.sleep(0.3)  # Staggered reveal
+            
+            # Phase 3: Translation (reveal translation)
+            socketio.emit('analysis:phase', {
                 'tablet_id': tablet_id,
-                'word': word,
-                'word_index': idx,
-                'total_words': len(words),
-                'progress': int((idx + 1) / len(words) * 100)
+                'phase': 'translation',
+                'message': 'Decoding ancient text...'
             }, room=room, namespace='/')
-            time.sleep(0.2)
-        
-        # Phase 4: Complete
-        socketio.emit('analysis:phase', {
-            'tablet_id': tablet_id,
-            'phase': 'complete',
-            'message': 'Analysis complete'
-        }, room=room, namespace='/')
-        
-        socketio.emit('analysis:complete', {
-            'tablet_id': tablet_id,
-            'signs_detected': total_signs,
-            'translation': translation_text,
-            'translation_source': translation_source,
-            'confidence': translation_confidence
-        }, room=room, namespace='/')
+            
+            # Get translation with source info
+            translation_result = _generate_translation(signs, tablet)
+            translation_text = translation_result.get('translation', 'Translation unavailable')
+            translation_source = translation_result.get('source', 'unknown')
+            translation_confidence = translation_result.get('confidence', 0.5)
+            
+            # Get source-specific message
+            source_messages = {
+                'cdli_scholarly': 'Using verified scholarly translation',
+                'neural_model': 'AI translating never-before-seen text...',
+                'sign_dictionary': 'Translating sign by sign...',
+                'contextual_placeholder': 'Generating contextual interpretation...'
+            }
+            
+            socketio.emit('analysis:phase', {
+                'tablet_id': tablet_id,
+                'phase': 'translation',
+                'message': source_messages.get(translation_source, 'Decoding...')
+            }, room=room, namespace='/')
+            
+            words = translation_text.split(' ')
+            
+            for idx, word in enumerate(words):
+                socketio.emit('analysis:translation', {
+                    'tablet_id': tablet_id,
+                    'word': word,
+                    'word_index': idx,
+                    'total_words': len(words),
+                    'progress': int((idx + 1) / len(words) * 100)
+                }, room=room, namespace='/')
+                time.sleep(0.2)
+            
+            # Phase 4: Complete
+            socketio.emit('analysis:phase', {
+                'tablet_id': tablet_id,
+                'phase': 'complete',
+                'message': 'Analysis complete'
+            }, room=room, namespace='/')
+            
+            socketio.emit('analysis:complete', {
+                'tablet_id': tablet_id,
+                'signs_detected': total_signs,
+                'translation': translation_text,
+                'translation_source': translation_source,
+                'confidence': translation_confidence
+            }, room=room, namespace='/')
+
+        except Exception as e:
+            print(f"Error in background analysis task: {e}")
+            traceback.print_exc()
+            # Try to notify the client about the error
+            try:
+                socketio.emit('analysis:phase', {
+                    'tablet_id': tablet_id,
+                    'phase': 'idle',
+                    'message': f'Analysis error: {str(e)}'
+                }, room=f'tablet:{tablet_id}', namespace='/')
+            except:
+                pass
 
 
 def _generate_detected_signs(tablet):

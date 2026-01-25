@@ -7,7 +7,7 @@ from flask_jwt_extended import JWTManager
 
 # Initialize extensions
 db = SQLAlchemy()
-socketio = SocketIO(cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(cors_allowed_origins="*")
 jwt = JWTManager()
 
 
@@ -28,18 +28,21 @@ def create_app(config_name='development'):
     
     # Initialize extensions
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")
+    socketio.init_app(app, 
+                     cors_allowed_origins="*", 
+                     async_mode=app.config.get('SOCKETIO_ASYNC_MODE', 'eventlet'))
     jwt.init_app(app)
     CORS(app, origins=app.config['CORS_ORIGINS'])
     
     # Register blueprints
-    from .api import pipeline_bp, models_bp, tablets_bp, analytics_bp, health_bp, test_bp
+    from .api import pipeline_bp, models_bp, tablets_bp, analytics_bp, health_bp, test_bp, browser_bp
     app.register_blueprint(health_bp)
     app.register_blueprint(pipeline_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(tablets_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(test_bp)
+    app.register_blueprint(browser_bp)
     
     # Register SocketIO handlers
     from .websocket import register_handlers

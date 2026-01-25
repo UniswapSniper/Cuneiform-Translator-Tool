@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import io, { Socket } from 'socket.io-client'
-import { SOCKET_URL, API_BASE_URL, isApiAvailable } from '../lib/constants'
+import { SOCKET_URL, API_BASE_URL } from '../lib/constants'
 
 interface DetectedSign {
     id: number
@@ -128,6 +128,16 @@ export function useAnalysis(tabletId: number | undefined) {
             }))
         })
 
+        // Analysis error
+        socket.on('analysis:error', (data: { error: string }) => {
+            console.error('Analysis error received:', data.error);
+            setState(prev => ({
+                ...prev,
+                phase: 'idle',
+                message: `Error: ${data.error}`
+            }))
+        })
+
         return () => {
             socket.emit('leave:tablet', { tablet_id: tabletId })
             socket.disconnect()
@@ -136,29 +146,45 @@ export function useAnalysis(tabletId: number | undefined) {
 
     // Start analysis function
     const startAnalysis = useCallback(async () => {
-        if (!tabletId || !isApiAvailable() || !API_BASE_URL) return
+        console.log('startAnalysis called for tablet:', tabletId);
+
+        if (!tabletId) {
+            console.warn('Cannot start analysis: tabletId is missing');
+            return;
+        }
+
+        if (!API_BASE_URL) {
+            console.error('Cannot start analysis: API_BASE_URL is missing');
+            return;
+        }
 
         // Reset state
         setState({
             ...initialState,
-            isConnected: state.isConnected
+            isConnected: state.isConnected,
+            phase: 'scanning',
+            message: 'Sending analysis request...'
         })
 
         try {
+            console.log(`POSTing to ${API_BASE_URL}/tablets/${tabletId}/analyze...`);
             const response = await fetch(`${API_BASE_URL}/tablets/${tabletId}/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             })
 
             if (!response.ok) {
-                throw new Error('Failed to start analysis')
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to start analysis');
             }
-        } catch (error) {
-            console.error('Failed to start analysis:', error)
+
+            console.log('Analysis request accepted by server');
+        } catch (error: any) {
+            console.error('Failed to start analysis:', error);
             setState(prev => ({
                 ...prev,
                 phase: 'idle',
-                message: 'Failed to start analysis'
+                message: `Failed: ${error.message}`
             }))
         }
     }, [tabletId, state.isConnected])

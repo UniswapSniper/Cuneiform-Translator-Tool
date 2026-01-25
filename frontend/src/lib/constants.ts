@@ -33,50 +33,17 @@ export const IS_BACKEND_CONFIGURED = API_BASE_URL !== null && SOCKET_URL !== nul
  * Global API availability tracking with aggressive failure handling
  * Allow ONE attempt, then block on any failure, but retry after 30s
  */
-let globalApiCircuitOpen = false  // Start OPEN (allow calls)
-let hasFailedOnce = false
-let lastFailureTime = 0
-const CIRCUIT_RESET_TIME_MS = 30000 // 30 seconds
 
 export function isApiAvailable(): boolean {
-    if (!IS_BACKEND_CONFIGURED) return false
-
-    // If circuit is broken, check if enough time has passed to retry (probe)
-    if (globalApiCircuitOpen) {
-        const now = Date.now()
-        if (now - lastFailureTime > CIRCUIT_RESET_TIME_MS) {
-            // Allow one probe request
-            return true
-        }
-        return false
-    }
-
-    return true
+    return IS_BACKEND_CONFIGURED
 }
 
 export function reportApiFailure(): void {
-    const now = Date.now()
-    // Update failure time but don't spam console
-    lastFailureTime = now
-
-    if (!hasFailedOnce) {
-        hasFailedOnce = true
-        globalApiCircuitOpen = true
-        console.warn('[API] Backend connection failed - temporarily disabling API calls for 30s')
-    } else if (!globalApiCircuitOpen) {
-        // Circuit was closed (mostly working), but just failed again
-        globalApiCircuitOpen = true
-        console.warn('[API] Backend connection failed again - disabling API calls for 30s')
-    }
+    console.warn('[API] Backend connection reported failure')
 }
 
 export function reportApiSuccess(): void {
-    if (hasFailedOnce || globalApiCircuitOpen) {
-        console.log('[API] Backend connection restored')
-        hasFailedOnce = false
-        globalApiCircuitOpen = false
-        lastFailureTime = 0
-    }
+    // No-op
 }
 
 // Only log in development

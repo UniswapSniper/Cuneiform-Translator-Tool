@@ -321,14 +321,18 @@ class PipelineWorker:
 
 
 def start_pipeline_worker(run_id: int):
-    """Start a pipeline worker in a background thread."""
-    import threading
+    """Start a pipeline worker in a background task."""
+    from flask import current_app
+    app = current_app._get_current_object()
     
-    def run_in_thread():
-        with socketio.server.app.app_context():
-            worker = PipelineWorker(run_id)
-            worker.run_pipeline()
+    def run_in_task(app_instance, r_id):
+        with app_instance.app_context():
+            try:
+                worker = PipelineWorker(r_id)
+                worker.run_pipeline()
+            except Exception as e:
+                print(f"Error in pipeline worker: {e}")
+                import traceback
+                traceback.print_exc()
     
-    thread = threading.Thread(target=run_in_thread, daemon=True)
-    thread.start()
-    return thread
+    socketio.start_background_task(run_in_task, app, run_id)

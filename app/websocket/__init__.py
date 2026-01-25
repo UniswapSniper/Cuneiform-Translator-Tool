@@ -34,6 +34,24 @@ def register_handlers(socketio_instance):
         leave_room(room)
         emit('unsubscribed', {'run_id': run_id})
     
+    @socketio_instance.on('join:tablet')
+    def handle_join_tablet(data):
+        """Join a tablet room for analysis updates."""
+        tablet_id = data.get('tablet_id')
+        if tablet_id:
+            room = f'tablet:{tablet_id}'
+            join_room(room)
+            emit('joined:tablet', {'tablet_id': tablet_id, 'room': room})
+    
+    @socketio_instance.on('leave:tablet')
+    def handle_leave_tablet(data):
+        """Leave a tablet room."""
+        tablet_id = data.get('tablet_id')
+        if tablet_id:
+            room = f'tablet:{tablet_id}'
+            leave_room(room)
+            emit('left:tablet', {'tablet_id': tablet_id})
+    
     @socketio_instance.on('pipeline:update')
     def handle_pipeline_update(data):
         """Handle pipeline progress update."""

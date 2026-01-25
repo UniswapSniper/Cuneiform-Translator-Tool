@@ -1,4 +1,7 @@
 """Main entry point for Render/Gunicorn at the project root."""
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import sys
 
