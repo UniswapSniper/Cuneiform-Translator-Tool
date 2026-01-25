@@ -3,7 +3,11 @@ import { useAnalyticsStore } from '../stores/analyticsStore'
 import { IS_BACKEND_CONFIGURED } from '../lib/constants'
 
 export function useAnalytics(refetchInterval: number = 30000) {
+  // Select specific action to verify stability and prevent infinite loops in useEffect
+  const fetch = useAnalyticsStore(state => state.fetch)
+  // Get full state to return to component
   const store = useAnalyticsStore()
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -13,11 +17,11 @@ export function useAnalytics(refetchInterval: number = 30000) {
     }
 
     // Fetch immediately on mount
-    store.fetch()
+    fetch()
 
     // Set up periodic refresh
     intervalRef.current = setInterval(() => {
-      store.fetch()
+      fetch()
     }, refetchInterval)
 
     return () => {
@@ -25,7 +29,7 @@ export function useAnalytics(refetchInterval: number = 30000) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [store, refetchInterval])
+  }, [fetch, refetchInterval])
 
   return store
 }
