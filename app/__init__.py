@@ -7,7 +7,7 @@ from flask_jwt_extended import JWTManager
 
 # Initialize extensions
 db = SQLAlchemy()
-socketio = SocketIO(cors_allowed_origins="*", async_mode='gevent')
+socketio = SocketIO(cors_allowed_origins="*", async_mode='eventlet')
 jwt = JWTManager()
 
 
