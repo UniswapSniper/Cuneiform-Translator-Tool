@@ -156,8 +156,9 @@ class CDLITranslationService:
         
         Priority:
         1. CDLI scholarly translation (if exists)
-        2. Sign-by-sign dictionary translation
-        3. Contextual placeholder
+        2. Neural machine translation (for new tablets)
+        3. Sign-by-sign dictionary translation
+        4. Contextual placeholder
         
         Returns:
             dict with translation info
@@ -172,12 +173,29 @@ class CDLITranslationService:
         }
         
         # Try CDLI translation first
-        cdli_translation = self.get_cdli_translation(pnumber)
-        if cdli_translation:
-            result['source'] = 'cdli_scholarly'
-            result['translation'] = cdli_translation
-            result['confidence'] = 0.95  # High confidence for scholarly work
-            return result
+        if pnumber:
+            cdli_translation = self.get_cdli_translation(pnumber)
+            if cdli_translation:
+                result['source'] = 'cdli_scholarly'
+                result['translation'] = cdli_translation
+                result['confidence'] = 0.95  # High confidence for scholarly work
+                return result
+        
+        # Try neural translation for new tablets
+        if detected_signs:
+            try:
+                from .neural_translation import translate_tablet_neural
+                
+                neural_result = translate_tablet_neural(detected_signs)
+                
+                if neural_result.get('translation') and neural_result.get('source') != 'fallback':
+                    result['source'] = 'neural_model'
+                    result['translation'] = neural_result['translation']
+                    result['confidence'] = neural_result.get('confidence', 0.75)
+                    result['model'] = neural_result.get('model', 'praeclarum/cuneiform')
+                    return result
+            except Exception as e:
+                print(f"Neural translation error: {e}")
         
         # Fall back to sign dictionary
         if detected_signs:
