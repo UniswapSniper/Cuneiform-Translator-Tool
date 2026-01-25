@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScanLine } from '../components/effects/ScanLine'
@@ -6,6 +6,7 @@ import { DetectionBox } from '../components/effects/DetectionBox'
 import { ParticleSystem } from '../components/effects/ParticleSystem'
 import { WordByWordText } from '../components/effects/TypewriterText'
 import { useAnalysis } from '../hooks/useAnalysis'
+import { useSoundEffects } from '../lib/soundEffects'
 import { API_BASE_URL } from '../lib/constants'
 
 interface Tablet {
@@ -21,8 +22,40 @@ export default function DecodingInspector() {
     const navigate = useNavigate()
     const [tablet, setTablet] = useState<Tablet | null>(null)
     const [highlightedSign, setHighlightedSign] = useState<number | null>(null)
+    const prevPhaseRef = useRef<string>('idle')
+    const prevSignCountRef = useRef<number>(0)
+    const prevWordCountRef = useRef<number>(0)
 
     const analysis = useAnalysis(tabletId ? parseInt(tabletId) : undefined)
+    const sound = useSoundEffects()
+
+    // Play sounds on phase/progress changes
+    useEffect(() => {
+        // Phase change sounds
+        if (analysis.phase !== prevPhaseRef.current) {
+            if (analysis.phase === 'complete') {
+                sound.playCompleteSound()
+            }
+            prevPhaseRef.current = analysis.phase
+        }
+
+        // Scan beeps (every 10%)
+        if (analysis.phase === 'scanning' && analysis.scanProgress % 10 === 0 && analysis.scanProgress > 0) {
+            sound.playScanBeep()
+        }
+
+        // Detection sounds (on new sign)
+        if (analysis.signs.length > prevSignCountRef.current) {
+            sound.playDetectSound()
+            prevSignCountRef.current = analysis.signs.length
+        }
+
+        // Translation sounds (on new word)
+        if (analysis.translationWords.length > prevWordCountRef.current) {
+            sound.playTranslateSound()
+            prevWordCountRef.current = analysis.translationWords.length
+        }
+    }, [analysis.phase, analysis.scanProgress, analysis.signs.length, analysis.translationWords.length])
 
     // Fetch tablet details
     useEffect(() => {
@@ -101,11 +134,24 @@ export default function DecodingInspector() {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${analysis.isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-                        <span className="text-xs text-gray-500">
-                            {analysis.isConnected ? 'Connected' : 'Disconnected'}
-                        </span>
+                    <div className="flex items-center gap-4">
+                        {/* Sound toggle */}
+                        <button
+                            onClick={sound.toggleSound}
+                            className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 transition-colors ${sound.enabled
+                                    ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-700'
+                                    : 'bg-gray-800 text-gray-500 border border-gray-700'
+                                }`}
+                        >
+                            {sound.enabled ? '🔊' : '🔇'} Sound
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${analysis.isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                            <span className="text-xs text-gray-500">
+                                {analysis.isConnected ? 'Connected' : 'Disconnected'}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -126,8 +172,8 @@ export default function DecodingInspector() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.05 }}
                                         className={`p-2 rounded-lg cursor-pointer transition-colors ${highlightedSign === sign.id
-                                                ? 'bg-cyan-900/50 border border-cyan-500'
-                                                : 'bg-gray-800/50 hover:bg-gray-700/50'
+                                            ? 'bg-cyan-900/50 border border-cyan-500'
+                                            : 'bg-gray-800/50 hover:bg-gray-700/50'
                                             }`}
                                         onClick={() => setHighlightedSign(sign.id)}
                                     >
