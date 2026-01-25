@@ -78,15 +78,20 @@ export function useWebSocket(url?: string) {
 export function usePipelineWebSocket(runId?: number) {
   const socket = useWebSocket()
   const store = usePipelineStore()
-  const subscribed = useRef(false)
+  const lastSubscribedId = useRef<number | null>(null)
 
   useEffect(() => {
     if (!socket || !runId) return
 
-    // Avoid duplicate subscriptions
-    if (!subscribed.current) {
+    // Avoid duplicate subscriptions for the SAME runId
+    if (lastSubscribedId.current !== runId) {
+      if (lastSubscribedId.current !== null) {
+        socket.emit('unsubscribe:pipeline', { run_id: lastSubscribedId.current })
+      }
+
+      console.log(`Subscribing to pipeline:${runId}`)
       socket.emit('subscribe:pipeline', { run_id: runId })
-      subscribed.current = true
+      lastSubscribedId.current = runId
       store.setRunId(runId)
     }
 
@@ -166,7 +171,7 @@ export function usePipelineWebSocket(runId?: number) {
       socket.off('pipeline:error', handlePipelineError)
       socket.off('pipeline:started', handlePipelineStarted)
       socket.off('pipeline:completed', handlePipelineCompleted)
-      subscribed.current = false
+      lastSubscribedId.current = null
     }
   }, [socket, runId, store])
 

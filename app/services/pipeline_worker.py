@@ -30,12 +30,19 @@ class PipelineWorker:
     def run_pipeline(self):
         """Execute the full pipeline."""
         try:
+            # Re-merge the run into the current session to ensure it's attached correctly
+            # throughout the background process.
+            self.run = db.session.merge(self.run)
+            
             self.run.status = 'running'
             self.run.started_at = datetime.utcnow()
+            self.run.progress = 0
             db.session.commit()
             
+            # Emit events to all clients in the pipeline room
             self.ws.emit_pipeline_started(self.run_id, self.config)
-            self.ws.emit_log_message(self.run_id, 'info', 'Pipeline started')
+            self.ws.emit_pipeline_progress(self.run_id, 0, 'running', 'Pipeline started')
+            self.ws.emit_log_message(self.run_id, 'info', 'Pipeline process initialized')
             
             # Step 1: Download tablets from CDLI
             if not self.config.get('skip_download', False):
