@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card } from '../components/Card'
 import { TabletUpload } from '../components/TabletUpload'
 import { API_BASE_URL } from '../lib/constants'
@@ -14,6 +15,7 @@ interface Tablet {
 }
 
 export default function TabletGallery() {
+  const navigate = useNavigate()
   const [tablets, setTablets] = useState<Tablet[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -97,6 +99,15 @@ export default function TabletGallery() {
                 </span>
                 <span className="text-xs text-gray-500">{tablet.annotation_count} annotations</span>
               </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/decode/${tablet.id}`)
+                }}
+                className="mt-3 w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-semibold rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all shadow-md hover:shadow-lg"
+              >
+                🔬 Analyze
+              </button>
             </Card>
           ))}
         </div>
