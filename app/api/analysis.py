@@ -83,7 +83,7 @@ def _run_analysis(tablet_id):
             'message': 'Decoding ancient text...'
         }, room=room, namespace='/')
         
-        translation = _generate_translation(signs)
+        translation = _generate_translation(signs, tablet)
         words = translation.split(' ')
         
         for idx, word in enumerate(words):
@@ -151,20 +151,17 @@ def _generate_detected_signs(tablet):
     return signs
 
 
-def _generate_translation(signs):
-    """Generate a realistic-looking translation."""
-    # Sample translations (mix of real Sumerian texts)
-    translations = [
-        "In the reign of Ur-Nammu, king of Ur, this tablet records the delivery of barley",
-        "To the temple of Inanna, offerings of silver and grain were brought by the merchants",
-        "The king of Sumer and Akkad, mighty ruler, commissioned this inscription",
-        "Three shekels of silver for the purchase of sheep, recorded in the year of the flood",
-        "By the command of Enlil, the temple granary received ten gur of barley",
-        "This administrative record documents the workers assigned to the irrigation canal",
-        "Royal inscription commemorating the restoration of the ancient temple walls",
-    ]
-    import random
-    return random.choice(translations)
+def _generate_translation(signs, tablet=None):
+    """Generate translation using the translation service."""
+    from ..services.translation_service import get_tablet_translation
+    
+    # Get tablet P-number if available
+    pnumber = tablet.pnumber if tablet else None
+    
+    # Get real translation
+    result = get_tablet_translation(pnumber, signs)
+    
+    return result.get('translation', 'Translation unavailable')
 
 
 def _get_cuneiform_unicode(sign_name):
