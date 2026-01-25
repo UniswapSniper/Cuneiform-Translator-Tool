@@ -195,16 +195,101 @@ class PipelineWorker:
         self.ws.emit_log_message(self.run_id, 'info', 'Translation phase completed')
     
     def _get_sample_pnumbers(self) -> List[str]:
-        """Get sample P-numbers to download."""
-        # In production, this would query CDLI API
-        # For now, return a small sample of real P-numbers
-        return [
-            'P254202',  # Ur III administrative tablet
-            'P254203',
-            'P254204',
-            'P254205',
-            'P254206',
+        """Get P-numbers based on configured selection method."""
+        method = self.config.get('selection_method', 'range')
+        count = self.config.get('tablet_count', 50)
+        
+        if method == 'range':
+            return self._get_range_pnumbers(count)
+        elif method == 'search':
+            return self._get_search_pnumbers(count)
+        elif method == 'random':
+            return self._get_random_pnumbers(count)
+        else:
+            # Default to range
+            return self._get_range_pnumbers(count)
+    
+    def _get_range_pnumbers(self, count: int) -> List[str]:
+        """Get P-numbers from a sequential range."""
+        start = self.config.get('range_start', 254200)
+        self.ws.emit_log_message(
+            self.run_id, 
+            'info', 
+            f'Using range method: P{start} to P{start + count - 1}'
+        )
+        return [f'P{start + i}' for i in range(count)]
+    
+    def _get_search_pnumbers(self, count: int) -> List[str]:
+        """Query CDLI search API for tablets by criteria."""
+        period = self.config.get('period', 'Ur III')
+        self.ws.emit_log_message(
+            self.run_id, 
+            'info', 
+            f'Searching CDLI for {count} tablets from period: {period}'
+        )
+        
+        try:
+            # CDLI search endpoint (simplified - actual API may differ)
+            # This is a placeholder - CDLI's actual search API would need proper implementation
+            url = "https://cdli.mpiwg-berlin.mpg.de/search"
+            params = {
+                'q': f'period:{period}',
+                'format': 'json',
+                'limit': count
+            }
+            
+            response = requests.get(url, params=params, timeout=30)
+            if response.status_code == 200:
+                # Parse response (format depends on CDLI API)
+                # For now, fall back to range if search fails
+                self.ws.emit_log_message(
+                    self.run_id, 
+                    'warning', 
+                    'CDLI search API not fully implemented, falling back to range'
+                )
+                return self._get_range_pnumbers(count)
+            else:
+                self.ws.emit_log_message(
+                    self.run_id, 
+                    'warning', 
+                    f'CDLI search failed (HTTP {response.status_code}), falling back to range'
+                )
+                return self._get_range_pnumbers(count)
+        except Exception as e:
+            self.ws.emit_log_message(
+                self.run_id, 
+                'error', 
+                f'Search error: {str(e)}, falling back to range'
+            )
+            return self._get_range_pnumbers(count)
+    
+    def _get_random_pnumbers(self, count: int) -> List[str]:
+        """Get random P-numbers from CDLI's collection."""
+        import random
+        
+        self.ws.emit_log_message(
+            self.run_id, 
+            'info', 
+            f'Generating {count} random P-numbers from CDLI collection'
+        )
+        
+        # CDLI P-numbers range approximately from P100000 to P500000
+        # This samples from known ranges with higher density of tablets
+        pnumbers = []
+        ranges = [
+            (100000, 150000),  # Early tablets
+            (200000, 300000),  # Middle period
+            (400000, 500000),  # Later tablets
         ]
+        
+        for _ in range(count):
+            # Pick a random range
+            start, end = random.choice(ranges)
+            pnum = f'P{random.randint(start, end):06d}'
+            pnumbers.append(pnum)
+        
+        return pnumbers
+
     
     def _create_dummy_annotations(self, tablet: Tablet):
         """Create dummy annotations for demonstration."""
