@@ -105,3 +105,72 @@ def delete_annotation(annotation_id):
     db.session.commit()
     
     return jsonify({'status': 'deleted'}), 204
+
+
+@tablets_bp.route('/upload', methods=['POST'])
+def upload_tablet():
+    """Upload a tablet image for processing."""
+    import os
+    import uuid
+    from werkzeug.utils import secure_filename
+    
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'tiff', 'tif'}
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads')
+    
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    
+    # Check if file was uploaded
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if not allowed_file(file.filename):
+        return jsonify({'error': f'Invalid file type. Allowed: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
+    
+    # Create upload directory if it doesn't exist
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    
+    # Generate unique filename
+    original_filename = secure_filename(file.filename)
+    ext = original_filename.rsplit('.', 1)[1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+    
+    # Save file
+    file.save(filepath)
+    
+    # Get metadata from form
+    name = request.form.get('name', original_filename)
+    description = request.form.get('description', '')
+    period = request.form.get('period', 'Unknown')
+    
+    # Generate P-number for user uploads (custom prefix)
+    existing_count = Tablet.query.filter(Tablet.pnumber.like('U%')).count()
+    pnumber = f"U{existing_count + 1:06d}"
+    
+    # Create tablet record
+    tablet = Tablet(
+        pnumber=pnumber,
+        name=name,
+        description=description,
+        image_path=f"/static/uploads/{unique_filename}",
+        thumbnail_path=f"/static/uploads/{unique_filename}",  # Same for now, could generate thumbnail
+        period=period,
+        quality_score=0.0,
+        quality_status='unreviewed',
+    )
+    
+    db.session.add(tablet)
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Tablet uploaded successfully',
+        'tablet': tablet.to_dict(),
+    }), 201
+

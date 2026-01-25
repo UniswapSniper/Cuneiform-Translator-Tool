@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card } from '../components/Card'
+import { TabletUpload } from '../components/TabletUpload'
 import { API_BASE_URL } from '../lib/constants'
 
 interface Tablet {
@@ -40,9 +41,19 @@ export default function TabletGallery() {
     return () => clearTimeout(timer)
   }, [search, quality])
 
+  const refreshTablets = () => {
+    setSearch(prev => prev + ' ')  // Trigger refetch
+    setTimeout(() => setSearch(prev => prev.trim()), 100)
+  }
+
   return (
     <div className="page-container">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Tablet Gallery</h1>
+
+      {/* Upload Section */}
+      <div className="mb-8">
+        <TabletUpload onUploadSuccess={refreshTablets} />
+      </div>
 
       <div className="mb-6 flex gap-4">
         <input
@@ -79,8 +90,8 @@ export default function TabletGallery() {
               <p className="text-sm text-gray-600 mt-1">{tablet.name || tablet.period || 'Unknown period'}</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className={`text-xs px-2 py-1 rounded-full ${tablet.quality_score > 80 ? 'bg-green-100 text-green-800' :
-                    tablet.quality_score > 50 ? 'bg-amber-100 text-amber-800' :
-                      'bg-red-100 text-red-800'
+                  tablet.quality_score > 50 ? 'bg-amber-100 text-amber-800' :
+                    'bg-red-100 text-red-800'
                   }`}>
                   Quality: {tablet.quality_score.toFixed(0)}%
                 </span>
