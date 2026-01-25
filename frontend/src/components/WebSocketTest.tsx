@@ -9,7 +9,10 @@ export function WebSocketTest() {
   const store = usePipelineStore()
   usePipelineWebSocket(isSubscribed ? runId : undefined)
 
-  const handleStartTest = async () => {
+  const handleStartTest = async (e: React.MouseEvent) => {
+    e.preventDefault()  // Prevent any form submission
+    e.stopPropagation()
+
     if (!isApiAvailable() || !API_BASE_URL) {
       console.warn('Backend unavailable - skipping test')
       return
@@ -28,6 +31,9 @@ export function WebSocketTest() {
           event_type: 'progress',
         }),
       })
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
       const data = await response.json()
       reportApiSuccess()
       console.log('Test events sent:', data)
