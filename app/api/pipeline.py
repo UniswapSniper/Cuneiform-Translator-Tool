@@ -51,12 +51,9 @@ def start_pipeline():
     db.session.add(run)
     db.session.commit()
     
-    # Emit event for background task to start
-    from .. import socketio
-    socketio.emit('pipeline:start', {
-        'run_id': run.id,
-        'config': run.config,
-    })
+    # Start the actual pipeline worker in background
+    from ..services.pipeline_worker import start_pipeline_worker
+    start_pipeline_worker(run.id)
     
     return jsonify({
         'id': run.id,
