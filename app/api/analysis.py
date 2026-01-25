@@ -83,8 +83,27 @@ def _run_analysis(tablet_id):
             'message': 'Decoding ancient text...'
         }, room=room, namespace='/')
         
-        translation = _generate_translation(signs, tablet)
-        words = translation.split(' ')
+        # Get translation with source info
+        translation_result = _generate_translation(signs, tablet)
+        translation_text = translation_result.get('translation', 'Translation unavailable')
+        translation_source = translation_result.get('source', 'unknown')
+        translation_confidence = translation_result.get('confidence', 0.5)
+        
+        # Get source-specific message
+        source_messages = {
+            'cdli_scholarly': 'Using verified scholarly translation',
+            'neural_model': 'AI translating never-before-seen text...',
+            'sign_dictionary': 'Translating sign by sign...',
+            'contextual_placeholder': 'Generating contextual interpretation...'
+        }
+        
+        socketio.emit('analysis:phase', {
+            'tablet_id': tablet_id,
+            'phase': 'translation',
+            'message': source_messages.get(translation_source, 'Decoding...')
+        }, room=room, namespace='/')
+        
+        words = translation_text.split(' ')
         
         for idx, word in enumerate(words):
             socketio.emit('analysis:translation', {
@@ -106,8 +125,9 @@ def _run_analysis(tablet_id):
         socketio.emit('analysis:complete', {
             'tablet_id': tablet_id,
             'signs_detected': total_signs,
-            'translation': translation,
-            'confidence': random.uniform(0.85, 0.95)
+            'translation': translation_text,
+            'translation_source': translation_source,
+            'confidence': translation_confidence
         }, room=room, namespace='/')
 
 
@@ -158,10 +178,11 @@ def _generate_translation(signs, tablet=None):
     # Get tablet P-number if available
     pnumber = tablet.pnumber if tablet else None
     
-    # Get real translation
+    # Get real translation with metadata
     result = get_tablet_translation(pnumber, signs)
     
-    return result.get('translation', 'Translation unavailable')
+    # Return the full result for rich UI display
+    return result
 
 
 def _get_cuneiform_unicode(sign_name):

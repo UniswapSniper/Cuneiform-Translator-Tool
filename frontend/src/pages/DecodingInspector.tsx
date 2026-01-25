@@ -139,8 +139,8 @@ export default function DecodingInspector() {
                         <button
                             onClick={sound.toggleSound}
                             className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 transition-colors ${sound.enabled
-                                    ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-700'
-                                    : 'bg-gray-800 text-gray-500 border border-gray-700'
+                                ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-700'
+                                : 'bg-gray-800 text-gray-500 border border-gray-700'
                                 }`}
                         >
                             {sound.enabled ? '🔊' : '🔇'} Sound
@@ -380,9 +380,25 @@ export default function DecodingInspector() {
                                         <span className="text-xl">✨</span>
                                         <span className="font-semibold">Analysis Complete!</span>
                                     </div>
-                                    <p className="text-sm text-gray-400 mt-1">
-                                        Confidence: {(analysis.confidence * 100).toFixed(1)}%
-                                    </p>
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <p className="text-sm text-gray-400">
+                                            Confidence: {(analysis.confidence * 100).toFixed(1)}%
+                                        </p>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${analysis.translationSource === 'neural_model'
+                                                ? 'bg-purple-900/50 text-purple-300 border border-purple-600'
+                                                : analysis.translationSource === 'cdli_scholarly'
+                                                    ? 'bg-blue-900/50 text-blue-300 border border-blue-600'
+                                                    : analysis.translationSource === 'sign_dictionary'
+                                                        ? 'bg-amber-900/50 text-amber-300 border border-amber-600'
+                                                        : 'bg-gray-700 text-gray-300'
+                                            }`}>
+                                            {analysis.translationSource === 'neural_model' && '🧠 AI Neural'}
+                                            {analysis.translationSource === 'cdli_scholarly' && '📚 Scholarly'}
+                                            {analysis.translationSource === 'sign_dictionary' && '📖 Dictionary'}
+                                            {analysis.translationSource === 'contextual_placeholder' && '💭 Contextual'}
+                                            {analysis.translationSource === 'unknown' && 'Unknown'}
+                                        </span>
+                                    </div>
                                 </motion.div>
                             )}
                         </div>

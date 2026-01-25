@@ -22,6 +22,7 @@ interface AnalysisState {
     translationWords: string[]
     currentWordIndex: number
     fullTranslation: string
+    translationSource: 'cdli_scholarly' | 'neural_model' | 'sign_dictionary' | 'contextual_placeholder' | 'unknown'
     message: string
     confidence: number
     isConnected: boolean
@@ -36,6 +37,7 @@ const initialState: AnalysisState = {
     translationWords: [],
     currentWordIndex: -1,
     fullTranslation: '',
+    translationSource: 'unknown',
     message: '',
     confidence: 0,
     isConnected: false
@@ -113,6 +115,7 @@ export function useAnalysis(tabletId: number | undefined) {
         // Analysis complete
         socket.on('analysis:complete', (data: {
             translation: string;
+            translation_source?: string;
             confidence: number;
             signs_detected: number;
         }) => {
@@ -120,6 +123,7 @@ export function useAnalysis(tabletId: number | undefined) {
                 ...prev,
                 phase: 'complete',
                 fullTranslation: data.translation,
+                translationSource: (data.translation_source || 'unknown') as AnalysisState['translationSource'],
                 confidence: data.confidence
             }))
         })
