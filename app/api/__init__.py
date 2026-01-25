@@ -15,6 +15,7 @@ from .health import *
 from .pipeline import *
 from .models import *
 from .tablets import *
+from .analysis import *  # Analysis endpoints for tablets
 from .analytics import *
 from .test import *
 from .browser import *
